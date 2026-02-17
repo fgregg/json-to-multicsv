@@ -1,0 +1,5 @@
+genres,item._key,item.genres._key
+sci-fi,item 1,0
+adventure,item 1,1
+history,item 2,0
+economics,item 2,1
