@@ -4,7 +4,8 @@ import csv
 
 import click
 
-from .converter import build_handlers, json_to_multicsv
+from .converter import ConvertError, json_to_multicsv
+from .parser import PathSpecError, build_handlers
 
 
 @click.command()
@@ -19,8 +20,14 @@ from .converter import build_handlers, json_to_multicsv
 @click.option("--table", "table_name", default=None, help="Top-level table name")
 def main(input_file, paths, table_name):
     """Split a JSON file with hierarchical data to multiple CSV files."""
-    handlers = build_handlers(paths)
-    tables = json_to_multicsv(input_file, handlers, table_name)
+    try:
+        handlers = build_handlers(paths)
+    except PathSpecError as e:
+        raise click.BadParameter("\n" + str(e), param_hint="'--path'") from None
+    try:
+        tables = json_to_multicsv(input_file, handlers, table_name)
+    except ConvertError as e:
+        raise click.BadParameter(str(e), param_hint="'--path'") from None
 
     for table_parts, rows in tables.items():
         fields = sorted({k for row in rows for k in row})

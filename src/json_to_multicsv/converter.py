@@ -7,52 +7,16 @@ top-down, applying path-based handlers to build the output tables.
 
 import json
 from collections import defaultdict
-from dataclasses import dataclass
+
+from json_to_multicsv.parser import Handler
+
+
+class ConvertError(Exception):
+    """Raised when the converter encounters data it cannot handle."""
 
 
 def _sorted_dict(items: list[tuple[str, object]]) -> dict:
     return dict(sorted(items))
-
-
-@dataclass
-class Handler:
-    kind: str
-    components: list[str]
-    name: str | None = None
-    fallback: bool = False
-
-    def matches(self, path: tuple[str, ...]) -> bool:
-        if len(path) != len(self.components):
-            return False
-        return all(c == "*" or c == p for c, p in zip(self.components, path))
-
-
-def _parse_path_spec(spec: str) -> Handler:
-    """Parse a --path value like '/:table:item' into a Handler."""
-    parts = spec.split(":")
-    raw_path = parts[0].rstrip("/")
-    kind = parts[1]
-    name = parts[2] if len(parts) > 2 else None
-
-    components = raw_path.split("/")[1:] if raw_path else []
-
-    return Handler(kind=kind, components=components, name=name)
-
-
-def build_handlers(path_specs: list[str]) -> list[Handler]:
-    """Parse path specs and expand into handler list with fallback column handlers."""
-    handlers: list[Handler] = []
-    for spec in path_specs:
-        h = _parse_path_spec(spec)
-        handlers.append(h)
-        handlers.append(
-            Handler(
-                kind="column",
-                components=h.components + ["*"],
-                fallback=True,
-            )
-        )
-    return handlers
 
 
 class Converter:
@@ -111,7 +75,15 @@ class Converter:
             return
 
         if not handler:
-            raise RuntimeError(f"Don't know how to handle value at /{'/'.join(path)}")
+            json_path = "/" + "/".join(path)
+            val_type = "object" if isinstance(val, dict) else "array"
+            raise ConvertError(
+                f"No handler matches the {val_type} at {json_path}\n"
+                f"Add a --path option for this location, for example:\n"
+                f"  --path '{json_path}:table:NAME'\n"
+                f"  --path '{json_path}:column'\n"
+                f"  --path '{json_path}:ignore'"
+            )
 
         # Normalize objects and lists into (key, value) pairs.
         if isinstance(val, dict):
