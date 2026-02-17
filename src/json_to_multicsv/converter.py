@@ -71,6 +71,14 @@ class Converter:
 
         # Scalars go directly into the current row.
         if not isinstance(val, dict | list):
+            if field in row:
+                json_path = "/" + "/".join(path)
+                raise ConvertError(
+                    f"Column name {field!r} already exists in table "
+                    f"{'.'.join(table_parts)!r} at {json_path}\n"
+                    f"This can happen when a JSON key contains '.' and "
+                    f"collides with a flattened nested path."
+                )
             row[field] = val
             return
 
@@ -99,14 +107,17 @@ class Converter:
                     child_parts = table_parts + (tbl_name,)
                     child_row = self._new_row(child_parts, child_keys)
                     self.tables[child_parts].append(child_row)
-                    self._walk(
-                        child,
-                        path=path + (child_key,),
-                        key=child_keys,
-                        table_parts=child_parts,
-                        field=tbl_name,
-                        row=child_row,
-                    )
+                    if not isinstance(child, dict | list):
+                        child_row[tbl_name] = child
+                    else:
+                        self._walk(
+                            child,
+                            path=path + (child_key,),
+                            key=child_keys,
+                            table_parts=child_parts,
+                            field=None,
+                            row=child_row,
+                        )
 
             case "column":
                 for child_key, child in children:
