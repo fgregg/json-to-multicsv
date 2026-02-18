@@ -69,7 +69,7 @@ def _check_no_prefix_collisions(handlers, table_name, raw_paths):
     "handlers",
     multiple=True,
     callback=_parse_paths,
-    help="pathspec:handler[:name]",
+    help="pathspec:handler[:name[:key_name]]",
 )
 @click.option("--table", "table_name", default=None, help="Top-level table name")
 @click.option(

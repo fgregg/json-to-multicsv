@@ -20,7 +20,7 @@ Usage: json-to-multicsv [OPTIONS]
 
 Options:
   --file FILENAME  JSON input file (default: stdin)
-  --path TEXT      pathspec:handler[:name]
+  --path TEXT      pathspec:handler[:name[:key_name]]
   --table TEXT     Top-level table name
   --no-prefix      Use only the last component of the table name for output
                    filenames.
