@@ -2,7 +2,7 @@
 
 Split a JSON file with hierarchical data into multiple CSV files.
 
-A Python rewrite of [jsnell/json-to-multicsv](https://github.com/jsnell/json-to-multicsv).
+A Python rewrite of [jsnell/json-to-multicsv](https://github.com/jsnell/json-to-multicsv). See Juho Snellman's [2016 blog post](https://www.snellman.net/blog/archive/2016-01-12-json-to-multicsv/) for motivation and design.
 
 ## Installation
 
