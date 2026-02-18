@@ -1,4 +1,4 @@
-count,country,item._key,item.sales._key
-76,us,item 2,0
-13,de,item 2,1
-4,fi,item 2,2
+item._key,item.sales._key,count,country
+item 2,0,76,us
+item 2,1,13,de
+item 2,2,4,fi

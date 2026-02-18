@@ -30,7 +30,8 @@ def main(input_file, paths, table_name):
         raise click.BadParameter(str(e), param_hint="'--path'") from None
 
     for table_parts, rows in tables.items():
-        fields = sorted({k for row in rows for k in row})
+        # Unique column names in insertion order (keys first, then data).
+        fields = list(dict.fromkeys(k for row in rows for k in row))
         with open(f"{'.'.join(table_parts)}.csv", "w") as f:
             writer = csv.DictWriter(f, fieldnames=fields, restval="")
             writer.writeheader()

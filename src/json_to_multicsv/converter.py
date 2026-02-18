@@ -37,6 +37,7 @@ class Converter:
             data,
             path=(),
             key=(),
+            key_names=(),
             table_parts=self._initial_table_parts,
             field=None,
             row=None,
@@ -55,15 +56,14 @@ class Converter:
                     return handler
         return fallback
 
-    def _new_row(self, table_parts: tuple[str, ...], key: tuple) -> dict:
+    def _new_row(self, key_names: tuple[str, ...], key: tuple) -> dict:
         """Create a row pre-populated with ancestor key columns."""
         row: dict = {}
         for i, k in enumerate(key):
-            col = ".".join(table_parts[: i + 1]) + "._key"
-            row[col] = k
+            row[key_names[i]] = k
         return row
 
-    def _walk(self, val, *, path, key, table_parts, field, row):
+    def _walk(self, val, *, path, key, key_names, table_parts, field, row):
         handler = self._find_handler(path)
 
         if handler and handler.kind == "ignore":
@@ -102,10 +102,15 @@ class Converter:
         match handler.kind:
             case "table":
                 tbl_name = handler.name
+                child_parts = table_parts + (tbl_name,)
+                if handler.key_name:
+                    col_name = handler.key_name
+                else:
+                    col_name = ".".join(child_parts[: len(key) + 1]) + "._key"
+                child_key_names = key_names + (col_name,)
                 for child_key, child in children:
                     child_keys = key + (child_key,)
-                    child_parts = table_parts + (tbl_name,)
-                    child_row = self._new_row(child_parts, child_keys)
+                    child_row = self._new_row(child_key_names, child_keys)
                     self.tables[child_parts].append(child_row)
                     if not isinstance(child, dict | list):
                         child_row[tbl_name] = child
@@ -114,6 +119,7 @@ class Converter:
                             child,
                             path=path + (child_key,),
                             key=child_keys,
+                            key_names=child_key_names,
                             table_parts=child_parts,
                             field=None,
                             row=child_row,
@@ -125,6 +131,7 @@ class Converter:
                         child,
                         path=path + (child_key,),
                         key=key,
+                        key_names=key_names,
                         table_parts=table_parts,
                         field=(
                             f"{field}.{child_key}" if field is not None else child_key
@@ -133,13 +140,14 @@ class Converter:
                     )
 
             case "row":
-                new_row = self._new_row(table_parts, key)
+                new_row = self._new_row(key_names, key)
                 self.tables[table_parts].append(new_row)
                 for child_key, child in children:
                     self._walk(
                         child,
                         path=path + (child_key,),
                         key=key,
+                        key_names=key_names,
                         table_parts=table_parts,
                         field=child_key,
                         row=new_row,

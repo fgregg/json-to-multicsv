@@ -35,6 +35,9 @@ def valid_specs(draw):
     if kind == "table":
         name = draw(table_name)
         spec += ":" + name
+        if draw(st.booleans()):
+            key = draw(table_name)
+            spec += ":" + key
 
     return spec
 
@@ -63,6 +66,7 @@ class TestFuzzParser:
             assert h.name is not None
         else:
             assert h.name is None
+            assert h.key_name is None
 
     @given(spec=garbage)
     @settings(max_examples=5000)

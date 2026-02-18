@@ -46,6 +46,18 @@ class TestValidSpecs:
         assert h.components == ["secret"]
         assert h.name is None
 
+    def test_table_with_key_name(self):
+        h = _parse("/:table:form:rptId")
+        assert h.kind == "table"
+        assert h.name == "form"
+        assert h.key_name == "rptId"
+
+    def test_table_without_key_name(self):
+        h = _parse("/:table:form")
+        assert h.kind == "table"
+        assert h.name == "form"
+        assert h.key_name is None
+
 
 class TestInvalidSpecs:
     def test_missing_leading_slash(self):
@@ -78,7 +90,11 @@ class TestInvalidSpecs:
 
     def test_too_many_parts(self):
         with pytest.raises(PathSpecError, match="Unexpected content"):
-            build_handlers(["/:table:name:extra"])
+            build_handlers(["/:table:name:key:extra"])
+
+    def test_empty_key_name(self):
+        with pytest.raises(PathSpecError, match=r"Expected text"):
+            build_handlers(["/:table:name:"])
 
     def test_bare_root_no_handler(self):
         with pytest.raises(PathSpecError, match=r"Expected ':'"):

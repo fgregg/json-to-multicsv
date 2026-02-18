@@ -40,6 +40,39 @@ class TestNoCollision:
         assert "item.bar" not in row
 
 
+class TestCustomKeyName:
+    def test_custom_key_name_in_output(self):
+        """A table with key_name should use it instead of the default ._key."""
+        data = {"x": {"foo": 1}, "y": {"foo": 2}}
+        tables = _convert(data, ["/:table:item:rptId"])
+        rows = tables[("item",)]
+        assert len(rows) == 2
+        assert "rptId" in rows[0]
+        assert "item._key" not in rows[0]
+
+    def test_default_key_name_when_omitted(self):
+        """Without key_name, the default ._key column is used."""
+        data = {"x": {"foo": 1}}
+        tables = _convert(data, ["/:table:item"])
+        rows = tables[("item",)]
+        assert "item._key" in rows[0]
+
+    def test_ancestor_custom_key_propagates(self):
+        """Custom key names propagate to child tables."""
+        data = {"a": {"subs": {"s1": {"val": 10}}}}
+        tables = _convert(
+            data,
+            ["/:table:form:rptId", "/*/subs:table:sub:subId"],
+        )
+        sub_rows = tables[("form", "sub")]
+        assert len(sub_rows) == 1
+        row = sub_rows[0]
+        assert "rptId" in row
+        assert "subId" in row
+        assert "form._key" not in row
+        assert "form.sub._key" not in row
+
+
 class TestCollision:
     def test_dotted_key_collides_with_nested_path(self):
         """A JSON key containing '.' collides with a flattened nested path.

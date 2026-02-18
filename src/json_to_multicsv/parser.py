@@ -17,6 +17,7 @@ class Handler:
     kind: str
     components: list[str]
     name: str | None = None
+    key_name: str | None = None
     fallback: bool = False
 
     def matches(self, path: tuple[str, ...]) -> bool:
@@ -95,16 +96,21 @@ def parse_path_spec(spec: str) -> Handler:
 
     # -- name (only for table) --
     name: str | None = None
+    key_name: str | None = None
     if kind == "table":
         lex.expect_char(":")
         name = lex.read_text()
+        # -- optional key name --
+        if lex.peek() == ":":
+            lex.expect_char(":")
+            key_name = lex.read_text()
     elif not lex.at_end():
         raise lex.error(f"'{kind}' handler does not take extra arguments")
 
     if not lex.at_end():
         raise lex.error("Unexpected content")
 
-    return Handler(kind=kind, components=components, name=name)
+    return Handler(kind=kind, components=components, name=name, key_name=key_name)
 
 
 def build_handlers(path_specs: list[str]) -> list[Handler]:

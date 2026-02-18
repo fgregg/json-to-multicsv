@@ -1,0 +1,15 @@
+{
+    "row1": {
+        "title": "First",
+        "subs": {
+            "a": {"val": 10},
+            "b": {"val": 20}
+        }
+    },
+    "row2": {
+        "title": "Second",
+        "subs": {
+            "c": {"val": 30}
+        }
+    }
+}

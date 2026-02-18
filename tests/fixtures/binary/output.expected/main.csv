@@ -1,6 +1,6 @@
-main,main._key
-"foo
-bar",crnl
-"foo
-bar",newline
-ä,unicode
+main._key,main
+crnl,"foo
+bar"
+newline,"foo
+bar"
+unicode,ä

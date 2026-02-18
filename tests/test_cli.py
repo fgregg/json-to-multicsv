@@ -132,3 +132,17 @@ def test_toplevel_list(tmp_path):
         ],
         tmp_path,
     )
+
+
+def test_key_name(tmp_path):
+    """Custom key column names via path spec, with propagation to child tables."""
+    _run_test(
+        "key-name",
+        [
+            "--path",
+            "/:table:item:itemId",
+            "--path",
+            "/*/subs:table:sub:subId",
+        ],
+        tmp_path,
+    )
