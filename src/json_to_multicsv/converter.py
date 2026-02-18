@@ -44,8 +44,6 @@ class Converter:
         )
         return self.tables
 
-    # -- internal machinery ---------------------------------------------------
-
     def _find_handler(self, path: tuple[str, ...]) -> Handler | None:
         fallback = None
         for handler in self.handlers:
