@@ -97,3 +97,34 @@ class TestCollision:
         row = rows[0]
         assert row["a.b"] == 42
         assert row["c"] == 7
+
+
+class TestNoHandlerSuggestion:
+    """Error suggestions should use * for table key positions."""
+
+    def test_one_table_level_array(self):
+        """Unhandled nested object under an array table uses * for the table key."""
+        data = [{"nested": {"a": 1}}]
+        with pytest.raises(ConvertError, match=r"--path '/\*/nested"):
+            _convert(data, ["/:table:item"])
+
+    def test_one_table_level_object(self):
+        """Unhandled nested object under an object table keeps the field name."""
+        data = {"x": {"nested": {"a": 1}}}
+        with pytest.raises(ConvertError, match=r"--path '/x/nested"):
+            _convert(data, ["/:table:item"])
+
+    def test_two_table_levels(self):
+        """The original jsnell/json-to-multicsv#7 case."""
+        data = [{"nested": {"z": 1, "a": [{"c": 2}]}}]
+        with pytest.raises(ConvertError, match=r"--path '/\*/nested/a"):
+            _convert(data, ["/:table:base", "/*/nested:table:nested"])
+
+    def test_three_table_levels(self):
+        """Deeply nested: array table keys become *, object keys stay concrete."""
+        data = [{"mid": [{"deep": {"a": 1}}]}]
+        with pytest.raises(ConvertError, match=r"--path '/\*/mid/\*/deep"):
+            _convert(
+                data,
+                ["/:table:outer", "/*/mid:table:inner"],
+            )
