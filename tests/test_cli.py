@@ -146,3 +146,70 @@ def test_key_name(tmp_path):
         ],
         tmp_path,
     )
+
+
+def test_no_prefix(tmp_path):
+    """--no-prefix uses only the last table name component for filenames."""
+    input_path = FIXTURES_DIR / "basic" / "input.json"
+    expected_csvs = _load_expected_csvs("basic")
+
+    runner = CliRunner()
+    args = [
+        "--file",
+        str(input_path),
+        "--no-prefix",
+        "--path",
+        "/:table:item",
+        "--path",
+        "/*/rating:column",
+        "--path",
+        "/*/sales:table:sales",
+        "--path",
+        "/*/appendix:table:appendix",
+        "--path",
+        "/*/genres:table:genres",
+    ]
+    with runner.isolated_filesystem(temp_dir=tmp_path) as td:
+        result = runner.invoke(main, args)
+        assert result.exit_code == 0, (
+            f"CLI exited with code {result.exit_code}\n"
+            f"Output: {result.output}\n"
+            f"Exception: {result.exception}"
+        )
+
+        td = Path(td)
+        # With --no-prefix, "item.sales.csv" becomes "sales.csv", etc.
+        for prefixed_name, expected_bytes in expected_csvs.items():
+            short_name = prefixed_name.rsplit(".", 1)[0].split(".")[-1] + ".csv"
+            actual_path = td / short_name
+            assert (
+                actual_path.exists()
+            ), f"Expected output file {short_name} not created"
+            assert actual_path.read_bytes() == expected_bytes
+
+
+def test_no_prefix_duplicate_error(tmp_path):
+    """--no-prefix raises an error when two tables share the same short name."""
+    runner = CliRunner()
+    with runner.isolated_filesystem(temp_dir=tmp_path) as td:
+        td = Path(td)
+        # Create JSON where two different table paths produce "item" as leaf name:
+        # ('top', 'item') and ('top', 'thing', 'item')
+        (td / "input.json").write_text('{"a": {"x": [1, 2], "y": [{"z": [10, 20]}]}}')
+        args = [
+            "--file",
+            str(td / "input.json"),
+            "--no-prefix",
+            "--path",
+            "/:table:top",
+            "--path",
+            "/*/x:table:item",
+            "--path",
+            "/*/y:table:thing",
+            "--path",
+            "/*/y/*/z:table:item",
+        ]
+        result = runner.invoke(main, args)
+        assert result.exit_code != 0
+        assert "duplicate table name" in result.output
+        assert "--path '/*/y/*/z:table:item_2'" in result.output
