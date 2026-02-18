@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "mypy", "pre-commit", "black"]
+dev = ["pytest", "ruff", "mypy", "pre-commit", "black", "hypothesis"]
 
 [project.scripts]
 json-to-multicsv = "json_to_multicsv.cli:main"

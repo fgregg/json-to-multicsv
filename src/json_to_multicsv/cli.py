@@ -92,7 +92,8 @@ def main(ctx, input_file, handlers, table_name, no_prefix):
     for table_parts, rows in tables.items():
         # Unique column names in insertion order (keys first, then data).
         fields = list(dict.fromkeys(k for row in rows for k in row))
-        filename = f"{table_parts[-1] if no_prefix else ".".join(table_parts)}.csv"
+        prefix = table_parts[-1] if no_prefix else ".".join(table_parts)
+        filename = f"{prefix}.csv"
         with open(filename, "w") as f:
             writer = csv.DictWriter(f, fieldnames=fields, restval="")
             writer.writeheader()
